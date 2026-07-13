@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Essay Structure Practice</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --line:#d1d5db;
+    --intro:#dbeafe;
+    --intro-border:#60a5fa;
+    --body:#dcfce7;
+    --body-border:#4ade80;
+    --conclusion:#ffedd5;
+    --conclusion-border:#fb923c;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  .wrap{
+    max-width:950px;
+    margin:0 auto;
+    padding:28px 18px 50px;
+  }
+
+  h1{
+    margin:0 0 8px;
+    font-size:2rem;
+  }
+
+  .lead{
+    margin:0 0 20px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+
+  .progress{
+    font-weight:700;
+  }
+
+  .topic{
+    background:#fff;
+    padding:12px 16px;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    font-weight:700;
+  }
+
+  .board{
+    background:var(--card);
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 10px 30px rgba(31,41,55,.08);
+  }
+
+  .instructions{
+    font-weight:700;
+    margin-bottom:14px;
+    line-height:1.45;
+  }
+
+  #cards{
+    display:grid;
+    gap:12px;
+  }
+
+  .card{
+    padding:16px 18px;
+    border-radius:14px;
+    border:2px solid var(--line);
+    background:#fff;
+    cursor:grab;
+    line-height:1.55;
+    user-select:none;
+    transition:transform .12s ease, box-shadow .12s ease, background .2s ease, border-color .2s ease;
+  }
+
+  .card:active{cursor:grabbing}
+  .card.dragging{opacity:.55;transform:scale(.99)}
+  .card.selected{box-shadow:0 0 0 4px rgba(17,24,39,.16)}
+
+  .card.revealed.intro{
+    background:var(--intro);
+    border-color:var(--intro-border);
+  }
+
+  .card.revealed.body{
+    background:var(--body);
+    border-color:var(--body-border);
+  }
+
+  .card.revealed.conclusion{
+    background:var(--conclusion);
+    border-color:var(--conclusion-border);
+  }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:18px;
+  }
+
+  button{
+    border:0;
+    border-radius:10px;
+    padding:11px 16px;
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+  }
+
+  #submit{background:#111827;color:white}
+  #retry{background:#e5e7eb;color:#111827}
+  #next{background:#dbeafe;color:#1e3a8a}
+  #shuffle{background:#f3f4f6;color:#111827}
+
+  #feedback{
+    min-height:32px;
+    margin-top:16px;
+    font-size:1.05rem;
+    font-weight:700;
+    line-height:1.5;
+  }
+
+  .legend{
+    display:none;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:16px;
+  }
+
+  .legend.show{
+    display:flex;
+  }
+
+  .tag{
+    padding:8px 12px;
+    border-radius:999px;
+    font-weight:700;
+    border:2px solid;
+  }
+
+  .tag.intro{background:var(--intro);border-color:var(--intro-border)}
+  .tag.body{background:var(--body);border-color:var(--body-border)}
+  .tag.conclusion{background:var(--conclusion);border-color:var(--conclusion-border)}
+
+  .tip{
+    margin-top:20px;
+    padding:14px 16px;
+    background:#fff;
+    border-left:5px solid #9ca3af;
+    border-radius:10px;
+    line-height:1.5;
+  }
+
+  .small{
+    font-size:.92rem;
+    color:var(--muted);
+    margin-top:12px;
+  }
+
+  @media (max-width:600px){
+    h1{font-size:1.6rem}
+    .card{padding:14px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Essay Structure Practice</h1>
+  <p class="lead">Rearrange each essay into the correct order. The colours will only appear after you submit your answer.</p>
+
+  <div class="topbar">
+    <div class="progress" id="progress"></div>
+    <div class="topic" id="topic"></div>
+  </div>
+
+  <div class="board">
+    <div class="instructions">
+      Drag the paragraphs into the correct order: introduction, body paragraphs, then conclusion.
+    </div>
+
+    <div id="cards" aria-live="polite"></div>
+
+    <div class="controls">
+      <button id="submit">Submit Answer</button>
+      <button id="retry" disabled>Try Again</button>
+      <button id="shuffle">Shuffle</button>
+      <button id="next">Next Essay</button>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="legend" id="legend">
+      <span class="tag intro">Blue = Introduction</span>
+      <span class="tag body">Green = Body</span>
+      <span class="tag conclusion">Orange = Conclusion</span>
+    </div>
+
+    <div class="small">
+      You can drag the cards with a mouse. You can also click one card, then click another card to swap them.
+    </div>
+  </div>
+
+  <div class="tip">
+    <strong>Teacher note:</strong> After submission, the colours reveal the role of each paragraph. This helps the student compare the structure with the order they chose.
+  </div>
+</div>
+
+<script>
+const essays = [
+  {
+    topic: "My Favourite Hobby",
+    paragraphs: [
+      {
+        id: 1,
+        type: "intro",
+        text: "My favourite hobby is playing football. I usually play with my friends after school. I enjoy football because it is fun, healthy, and exciting."
+      },
+      {
+        id: 2,
+        type: "body",
+        text: "First, football helps me stay healthy. I run a lot during the game, so it is a good form of exercise."
+      },
+      {
+        id: 3,
+        type: "body",
+        text: "I also enjoy playing football because I can spend time with my friends. We work together as a team and encourage each other."
+      },
+      {
+        id: 4,
+        type: "conclusion",
+        text: "In conclusion, football is my favourite hobby because it keeps me active and allows me to have fun with my friends. I hope to keep playing it for a long time."
+      }
+    ]
+  },
+  {
+    topic: "A Memorable School Trip",
+    paragraphs: [
+      {
+        id: 1,
+        type: "intro",
+        text: "Last year, my class went on a school trip to the science centre. It was one of the most exciting school trips I have ever had."
+      },
+      {
+        id: 2,
+        type: "body",
+        text: "At the science centre, we saw many interesting experiments. My favourite activity was a machine that showed how electricity works."
+      },
+      {
+        id: 3,
+        type: "body",
+        text: "I also enjoyed spending time with my classmates outside the classroom. We took pictures, ate lunch together, and talked about what we had learned."
+      },
+      {
+        id: 4,
+        type: "conclusion",
+        text: "Overall, the trip was both fun and educational. I learned many new things and made happy memories with my friends."
+      }
+    ]
+  },
+  {
+    topic: "Why Healthy Food Is Important",
+    paragraphs: [
+      {
+        id: 1,
+        type: "intro",
+        text: "Eating healthy food is important for everyone. Good food gives our bodies the energy and nutrients we need each day."
+      },
+      {
+        id: 2,
+        type: "body",
+        text: "Healthy food helps our bodies grow strong. Fruits, vegetables, eggs, and other nutritious foods provide vitamins and minerals."
+      },
+      {
+        id: 3,
+        type: "body",
+        text: "Healthy food can also help us focus better in school. When we eat well, we may feel more energetic and ready to learn."
+      },
+      {
+        id: 4,
+        type: "conclusion",
+        text: "In conclusion, healthy food is important because it supports our body and mind. Making good food choices can help us feel better every day."
+      }
+    ]
+  },
+  {
+    topic: "My Ideal Pet",
+    paragraphs: [
+      {
+        id: 1,
+        type: "intro",
+        text: "If I could choose any pet, I would choose a cat. Cats are calm, playful, and can be good companions."
+      },
+      {
+        id: 2,
+        type: "body",
+        text: "One reason I would like a cat is that cats can be very entertaining. They enjoy playing with toys and exploring their surroundings."
+      },
+      {
+        id: 3,
+        type: "body",
+        text: "Cats can also be affectionate. They may sit beside their owners, purr, and make the home feel less lonely."
+      },
+      {
+        id: 4,
+        type: "conclusion",
+        text: "For these reasons, a cat would be my ideal pet. I think having a cat would bring both fun and comfort to my home."
+      }
+    ]
+  },
+  {
+    topic: "Why Reading Is Useful",
+    paragraphs: [
+      {
+        id: 1,
+        type: "intro",
+        text: "Reading is a useful habit for people of all ages. It can help us learn new things and improve many important skills."
+      },
+      {
+        id: 2,
+        type: "body",
+        text: "Reading can improve our vocabulary. When we see new words in books and stories, we can learn what they mean and how to use them."
+      },
+      {
+        id: 3,
+        type: "body",
+        text: "Reading can also improve our imagination. Stories allow us to picture new places, characters, and situations in our minds."
+      },
+      {
+        id: 4,
+        type: "conclusion",
+        text: "In conclusion, reading is useful because it helps us learn and imagine. Reading regularly can make us better learners and writers."
+      }
+    ]
+  }
+];
+
+let currentEssay = 0;
+let order = [];
+let selectedId = null;
+let submitted = false;
+
+function shuffleArray(arr){
+  const copy = [...arr];
+  for(let i = copy.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function render(){
+  document.getElementById("progress").textContent =
+    `Essay ${currentEssay + 1} of ${essays.length}`;
+
+  document.getElementById("topic").textContent =
+    `Topic: ${essays[currentEssay].topic}`;
+
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+
+  order.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "card";
+    if(submitted){
+      card.classList.add("revealed", item.type);
+    }
+    card.draggable = !submitted;
+    card.tabIndex = 0;
+    card.dataset.id = item.id;
+    card.textContent = item.text;
+
+    if(!submitted){
+      card.addEventListener("dragstart", () => card.classList.add("dragging"));
+      card.addEventListener("dragend", () => card.classList.remove("dragging"));
+
+      card.addEventListener("click", () => {
+        if(selectedId === null){
+          selectedId = item.id;
+          card.classList.add("selected");
+        } else if(selectedId === item.id){
+          selectedId = null;
+          card.classList.remove("selected");
+        } else {
+          const a = order.findIndex(x => x.id === selectedId);
+          const b = order.findIndex(x => x.id === item.id);
+          [order[a], order[b]] = [order[b], order[a]];
+          selectedId = null;
+          render();
+        }
+      });
+    }
+
+    container.appendChild(card);
+  });
+
+  document.getElementById("submit").disabled = submitted;
+  document.getElementById("retry").disabled = !submitted;
+  document.getElementById("shuffle").disabled = submitted;
+  document.getElementById("legend").classList.toggle("show", submitted);
+}
+
+document.getElementById("cards").addEventListener("dragover", e => {
+  if(submitted) return;
+  e.preventDefault();
+
+  const container = e.currentTarget;
+  const dragging = document.querySelector(".dragging");
+  if(!dragging) return;
+
+  const cards = [...container.querySelectorAll(".card:not(.dragging)")];
+  const next = cards.find(card => {
+    const box = card.getBoundingClientRect();
+    return e.clientY < box.top + box.height / 2;
+  });
+
+  if(next) container.insertBefore(dragging, next);
+  else container.appendChild(dragging);
+});
+
+document.getElementById("cards").addEventListener("drop", () => {
+  if(submitted) return;
+
+  const ids = [...document.querySelectorAll(".card")].map(el => Number(el.dataset.id));
+  order = ids.map(id =>
+    essays[currentEssay].paragraphs.find(item => item.id === id)
+  );
+});
+
+document.getElementById("submit").addEventListener("click", () => {
+  const ids = [...document.querySelectorAll(".card")].map(el => Number(el.dataset.id));
+  order = ids.map(id =>
+    essays[currentEssay].paragraphs.find(item => item.id === id)
+  );
+
+  submitted = true;
+
+  const correct = ids.every((id, index) =>
+    id === essays[currentEssay].paragraphs[index].id
+  );
+
+  document.getElementById("feedback").textContent = correct
+    ? "✅ Correct! You arranged the essay in the right order."
+    : "❌ Not quite. Look at the colours: blue should come first, green should be in the middle, and orange should come last.";
+
+  render();
+});
+
+document.getElementById("retry").addEventListener("click", () => {
+  submitted = false;
+  selectedId = null;
+  document.getElementById("feedback").textContent = "";
+  render();
+});
+
+document.getElementById("shuffle").addEventListener("click", () => {
+  order = shuffleArray(essays[currentEssay].paragraphs);
+  selectedId = null;
+  document.getElementById("feedback").textContent = "";
+  render();
+});
+
+document.getElementById("next").addEventListener("click", () => {
+  currentEssay = (currentEssay + 1) % essays.length;
+  order = shuffleArray(essays[currentEssay].paragraphs);
+  selectedId = null;
+  submitted = false;
+  document.getElementById("feedback").textContent = "";
+  render();
+});
+
+order = shuffleArray(essays[currentEssay].paragraphs);
+render();
+</script>
+</body>
+</html>
